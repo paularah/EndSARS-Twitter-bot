@@ -13,41 +13,58 @@ import time
 
 class Endsars:
     def __init__(self):
+        try:
+            self.coordinate_campaign()
+        except TweepError as e:
+            self.coordinate_campaign()
+
+    def coordinate_campaign(self):
         validated_config = validate_config()
-        api_key, api_secret, access_token, access_token_secret, hashtags, blacklist = validated_config.values()
+        api_key, api_secret, access_token, access_token_secret, hashtags, blacklist, message = validated_config.values()
         api_key = api_key.strip()
         api_secret = api_secret.strip()
         access_token = access_token.strip()
         access_token_secret = access_token_secret.strip()
         api_instance = self.auth_user(api_key, api_secret, access_token, access_token_secret)
-        # self.like_and_retweet_search(api_instance)
-        # time.sleep(60)
         self.live_feed(api_instance, hashtags)
+        time.sleep(60)
+        self.like_and_retweet_search(api_instance, message)
+        time.sleep(60)
+        self.live_feed(api_instance, hashtags)
+        time.sleep(60)
+        self.like_and_retweet_search(api_instance, message)
 
     @staticmethod
     def auth_user(api_key, api_secret, access_token, access_token_secret):
         try:
             auth = OAuthHandler(api_key, api_secret)
             auth.set_access_token(access_token, access_token_secret)
-            api = API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True, retry_count=4, retry_delay=30)
+            api = API(auth, retry_count=4, wait_on_rate_limit_notify=True, wait_on_rate_limit=True, retry_delay=2)
+            time.sleep(3)
             print('API keys and tokens authenticated')
             return api
         except TweepError as e:
             logging.error(e.reason)
 
-    def like_and_retweet_search(self, api):
+    def like_and_retweet_search(self, api, message):
         for tweet in Cursor(api.search, '#EndSARS').items(30):
             try:
                 tweet.favorite()
                 print("likekeddd")
                 tweet.retweet()
+                time.sleep(3)
                 print("retweeted")
+                api.update_status(message, in_reply_to_status_id=tweet.id)
+                print('Replied tweet with message')
             except TweepError as e:
                 logging.error(e.reason)
 
     def live_feed(self, api, hashtags):
-        twitter_stream = Stream(api.auth, Listener(api))
-        twitter_stream.filter(track=hashtags)
+        try:
+            twitter_stream = Stream(api.auth, Listener(api))
+            twitter_stream.filter(track=hashtags)
+        except TweepError as e:
+            logging.error(e.reason)
 
 
 def validate_config():
@@ -69,6 +86,9 @@ def validate_config():
             "hashtags": {
                 "type": "array"
             },
+            "message": {
+                "type": "string"
+            },
             "blacklist": {
                 "type": "array"
             }
@@ -79,7 +99,7 @@ def validate_config():
             "ACCESS TOKEN",
             "ACCESS TOKEN SECRET",
             "hashtags",
-            "blacklist"
+            "message"
         ]
     }
     try:

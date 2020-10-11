@@ -1,6 +1,7 @@
 from tweepy.streaming import StreamListener
 import json
 import time
+from tweepy import TweepError
 
 
 class Listener(StreamListener):
