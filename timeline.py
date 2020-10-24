@@ -6,9 +6,10 @@ from tweepy import TweepError
 
 class Listener(StreamListener):
 
-    def __init__(self, api):
+    def __init__(self, api, message):
         super(StreamListener)
         self.api = api
+        self.message = message
 
     def on_data(self, data):
         try:
@@ -16,10 +17,14 @@ class Listener(StreamListener):
             if output['id']:
                 self.api.retweet(output['id'])
                 print('retweeted')
-                time.sleep(5)
-                self.api.update_status("#EndSarsNow, #EndSars, #EndSarsNow!", in_reply_to_status_id=output['id'],
+                time.sleep(10)
+                self.api.update_status(self.message, in_reply_to_status_id=output['id'],
                                        auto_populate_reply_metadata=True)
                 print('updated status')
             return True
         except KeyError as e:
             print(e)
+            return True
+
+    def on_error(self, status_code):
+        return True

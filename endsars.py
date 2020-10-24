@@ -26,11 +26,11 @@ class Endsars:
         access_token = access_token.strip()
         access_token_secret = access_token_secret.strip()
         api_instance = self.auth_user(api_key, api_secret, access_token, access_token_secret)
-        self.live_feed(api_instance, hashtags)
+        self.live_feed(api_instance, hashtags, message)
         time.sleep(60)
         self.like_and_retweet_search(api_instance, message)
         time.sleep(60)
-        self.live_feed(api_instance, hashtags)
+        self.live_feed(api_instance, hashtags, message)
         time.sleep(60)
         self.like_and_retweet_search(api_instance, message)
 
@@ -52,16 +52,16 @@ class Endsars:
                 tweet.favorite()
                 print("likekeddd")
                 tweet.retweet()
-                time.sleep(3)
+                time.sleep(10)
                 print("retweeted")
                 api.update_status(message, in_reply_to_status_id=tweet.id)
                 print('Replied tweet with message')
             except TweepError as e:
                 logging.error(e.reason)
 
-    def live_feed(self, api, hashtags):
+    def live_feed(self, api, hashtags, message):
         try:
-            twitter_stream = Stream(api.auth, Listener(api))
+            twitter_stream = Stream(api.auth, Listener(api, message))
             twitter_stream.filter(track=hashtags)
         except TweepError as e:
             logging.error(e.reason)
@@ -112,3 +112,6 @@ def validate_config():
             return config_json
     except ValueError or jsonschema.exceptions.ValidationError as e:
         logging.error(e.reason)
+
+
+Endsars()
